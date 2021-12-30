@@ -1,0 +1,17 @@
+numpy
+pandas
+matplotlib
+
+scikit-learn
+lightgbm
+tensorflow
+statsmodels
+pmdarima
+
+pystan
+prophet
+neuralprophet
+# pycaret
+
+black
+ipykernel
