@@ -21,20 +21,15 @@ def get_data(path: str) -> pd.DataFrame:
     return df
 
 
-def df_to_X_y(data: np.ndarray, window_size: int = 5) -> tuple:
+def time_series_split(data: pd.DataFrame, n_val: int, n_test: int) -> tuple:
     """
-    Convert a dataframe to X and y for training.
+    Split the data into training, validation and testing sets.
     """
-    X = []
-    y = []
+    df_to_np = data.set_index("ds").to_numpy()
+    n_aux = n_val + n_test
+    train, val, test = df_to_np[:-n_aux], df_to_np[-n_aux:-n_test], df_to_np[-n_test:]
 
-    for i in range(len(data) - window_size):
-        row = [[a] for a in data[i : i + window_size]]
-        X.append(row)
-        label = data[i + window_size]
-        y.append(label)
-
-    return np.array(X), np.array(y)
+    return train, val, test
 
 
 ### Functions for plotting the data.
@@ -63,19 +58,6 @@ def tsplot(y: pd.Series, lags: int = None, figsize: tuple = (12, 7)) -> None:
     plot_pacf(y, lags=lags, ax=pacf_ax)
     plt.tight_layout()
     plt.show()
-
-
-def plot_predictions(model, X, y, start=0, end=300):
-    """
-    Plot the predictions of the model.
-    """
-    predictions = model.predict(X).flatten()
-    df = pd.DataFrame(data={"Predictions": predictions, "Actuals": y})
-
-    plt.plot(df["Predictions"][start:end])
-    plt.plot(df["Actuals"][start:end])
-
-    return df, mean_squared_error(y, predictions)
 
 
 ### Functions for calculating metrics.

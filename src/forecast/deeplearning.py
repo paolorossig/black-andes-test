@@ -1,6 +1,8 @@
-import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from tensorflow.random import set_seed
 from tensorflow.keras.preprocessing.sequence import TimeseriesGenerator
 
 from tensorflow.keras.models import Sequential
@@ -9,89 +11,88 @@ from tensorflow.keras.losses import MeanSquaredError
 from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers import Adam
 
-from utils import *
+# from utils import *
+
+set_seed(42)
 
 
-df = get_data("../../data/producto_C.csv")
-df_np = df.set_index("ds").to_numpy()
+def scale_data(data: [np.ndarray], scaler_type: str = "standard") -> tuple:
+    if scaler_type == "minmax":
+        scaler = MinMaxScaler()
+    elif scaler_type == "standard":
+        scaler = StandardScaler()
+    else:
+        raise ValueError("scaler must be 'minmax' or 'standar'")
 
-N_TEST = 30
-y_train, y_test = df_np[:-N_TEST], df_np[-N_TEST:]
+    data_scaled = []
+    scaler = scaler.fit(data[0])
+    for i in data:
+        data_scaled.append(scaler.transform(i).flatten())
 
-scaler = StandardScaler()
-# scaler = MinMaxScaler()
-scaler = scaler.fit(y_train)
-y_train = scaler.transform(y_train).flatten()
-y_test = scaler.transform(y_test).flatten()
-
-window_size = 7
-X, y = df_to_X_y(y_train, window_size)
-# generator = TimeseriesGenerator(y_train, y_train, length=window_size, batch_size=1)
-X.shape, y.shape
-
-X_train, y_train = X[:-15], y[:-15]
-X_val, y_val = X[-15:], y[-15:]
-X_test, y_test = df_to_X_y(y_test, window_size)
-X_train.shape, y_train.shape, X_val.shape, y_val.shape, X_test.shape, y_test.shape
+    return data_scaled, scaler
 
 
-# model = Sequential()
-# model.add(InputLayer((window_size, 1)))
-# model.add(LSTM(200))
-# model.add(Dense(20, "relu"))
-# model.add(Dense(1, "linear"))
+def time_series_to_X_y(series: [np.ndarray], window_size: int = 5) -> list:
+    data = []
+    for serie in series:
+        X, y = [], []
 
-# model.summary()
+        for i in range(len(serie) - window_size):
+            row = [[a] for a in serie[i : i + window_size]]
+            X.append(row)
+            label = serie[i + window_size]
+            y.append(label)
 
-model = Sequential()
-model.add(InputLayer((window_size, 1)))
-model.add(Conv1D(200, kernel_size=2))
-model.add(Flatten())
-model.add(Dense(20, "relu"))
-model.add(Dense(1, "linear"))
+        data.append((np.array(X), np.array(y)))
 
-model.summary()
+    return data
 
-# model = Sequential()
-# model.add(InputLayer((window_size, 1)))
-# model.add(GRU(64))
-# model.add(Dense(8, "relu"))
-# model.add(Dense(1, "linear"))
 
-# model.summary()
+class DeepLearningModel:
+    def __init__(self, architecture, filters, window_size):
+        self.architecture = architecture
+        self.filters = filters
+        self.window_size = window_size
 
-# model = Sequential()
-# model.add(InputLayer((window_size, 1)))
-# model.add(LSTM(32, return_sequences=True))
-# model.add(LSTM(64))
-# model.add(Dense(8, "relu"))
-# model.add(Dense(1, "linear"))
+        model = Sequential()
+        model.add(InputLayer((self.window_size, 1)))
+        model.add(Conv1D(self.filters, kernel_size=2))
+        model.add(Flatten())
+        model.add(Dense(20, "relu"))
+        model.add(Dense(1, "linear"))
 
-# model.summary()
+        self.model = model
 
-model.compile(
-    loss=MeanSquaredError(),
-    optimizer=Adam(learning_rate=0.0001),
-    metrics=[RootMeanSquaredError()],
-)
-model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=10, verbose=False)
-# model.fit_generator(generator, validation_data=(X_val, y_val), epochs=10, verbose=False)
+    def fit(self, train_set, val_set, epochs):
+        X_train, y_train = train_set
+        X_val, y_val = val_set
 
-preds = model.predict(X_test)
+        self.model.compile(
+            loss=MeanSquaredError(),
+            optimizer=Adam(learning_rate=0.0001),
+            metrics=[RootMeanSquaredError()],
+        )
 
-preds = scaler.inverse_transform(preds).flatten()
-y_test = scaler.inverse_transform(y_test).flatten()
+        history = self.model.fit(
+            X_train, y_train, validation_data=(X_val, y_val), epochs=epochs
+        )
+        self.history = history.history
 
-rmse(y_test, preds)
-plt.plot(y_test, label="y_test")
-plt.plot(preds, label="preds")
-plt.show()
-# 359.44 (64 LSTM - 8 relu)
-# 331.98 (200 LSTM - 20 relu)
-# 364.02 (64 CNN - 8 relu)
-# 277.05 (200 CNN - 20 relu)
-# 339.97 (64 GRU - 8 relu)
-# 328.05 (200 GRU - 20 relu)
+    def predict(self, X):
+        return self.model.predict(X)
 
-plot_predictions(model, X, y, end=600)
-plot_predictions(model, X_test, y_test)
+    def plot_loss_function(self):
+        plt.plot(self.history["loss"])
+        plt.plot(self.history["val_loss"])
+        plt.title("Model Loss")
+        plt.xlabel("Epochs")
+        plt.legend(["train", "val"], loc="upper right")
+        plt.show()
+
+    def plot_rmse_function(self):
+        plt.plot(self.history["root_mean_squared_error"])
+        plt.plot(self.history["val_root_mean_squared_error"])
+        plt.title("Model RMSE")
+        plt.xlabel("Epochs")
+        plt.legend(["train", "val"], loc="upper right")
+        plt.show()
