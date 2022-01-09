@@ -1,6 +1,7 @@
 numpy
 pandas
 matplotlib
+plotly
 
 scikit-learn
 lightgbm
@@ -10,7 +11,6 @@ pmdarima
 
 pystan
 prophet
-neuralprophet
 # pycaret
 
 black
