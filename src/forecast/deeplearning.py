@@ -11,7 +11,7 @@ from tensorflow.keras.losses import MeanSquaredError
 from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers import Adam
 
-from src.forecast.utils import rmse, mape, mase
+from src.forecast.utils import print_metrics
 
 set_seed(42)
 
@@ -48,16 +48,13 @@ def time_series_to_X_y(series: [np.ndarray], window_size: int = 5) -> list:
     return data
 
 
-def plot_predictions(y_true: np.ndarray, y_pred: np.ndarray, scaler) -> None:
-    y_true = scaler.inverse_transform(y_true.reshape(-1, 1)).flatten()
-    y_pred = scaler.inverse_transform(y_pred).flatten()
+def plot_predictions(
+    y_true: np.ndarray, y_pred: np.ndarray, y_train: np.ndarray
+) -> None:
+    print_metrics(y_true, y_pred, y_train)
 
-    print("RMSE: {:.2f}".format(rmse(y_true, y_pred)))
-    print("MAPE: {:.2f}%".format(mape(y_true, y_pred) * 100))
-    print("MASE: {:.2f}%".format(mase(y_true, y_pred) * 100))
-
-    plt.plot(y_true, label="y_true")
-    plt.plot(y_pred, label="preds")
+    plt.plot(y_true, "o", color="black", label="y_true")
+    plt.plot(y_pred, "-", label="preds")
     plt.legend()
     plt.show()
 
@@ -99,14 +96,6 @@ class DeepLearningModel:
         plt.plot(self.history["loss"])
         plt.plot(self.history["val_loss"])
         plt.title("Model Loss")
-        plt.xlabel("Epochs")
-        plt.legend(["train", "val"], loc="upper right")
-        plt.show()
-
-    def plot_rmse_function(self):
-        plt.plot(self.history["root_mean_squared_error"])
-        plt.plot(self.history["val_root_mean_squared_error"])
-        plt.title("Model RMSE")
         plt.xlabel("Epochs")
         plt.legend(["train", "val"], loc="upper right")
         plt.show()

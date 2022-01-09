@@ -33,7 +33,7 @@ def time_series_split(data: pd.DataFrame, n_val: int, n_test: int) -> tuple:
 
 
 ### Functions for plotting the data.
-def tsplot(y: pd.Series, lags: int = None, figsize: tuple = (12, 7)) -> None:
+def tsplot(y: pd.Series, lags: int = None, figsize: tuple = (12, 6)) -> None:
     """
     Plot time series, its ACF and PACF, calculate Dickey–Fuller test
 
@@ -61,24 +61,33 @@ def tsplot(y: pd.Series, lags: int = None, figsize: tuple = (12, 7)) -> None:
 
 
 ### Functions for calculating metrics.
-def rmse(y_true, y_pred):
+def rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """
     Calculate the root mean squared error.
     """
     return np.sqrt(mean_squared_error(y_true, y_pred))
 
 
-def mape(y_true, y_pred):
+def mape(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """
     Calculate the mean absolute percentage error.
     """
     return np.mean(np.abs((y_true - y_pred) / y_true))
 
 
-def mase(y_true, y_pred):
+def mase(y_true: np.ndarray, y_pred: np.ndarray, y_train: np.ndarray) -> float:
     """
     Calculate the mean absolute scaled error.
     """
     mae = np.mean(np.abs(y_true - y_pred))
-    mae_insample_naive = np.mean(np.abs(y_true[1:] - y_true[:-1]))
+    mae_insample_naive = np.mean(np.abs(y_train[1:] - y_train[:-1]))
     return mae / mae_insample_naive
+
+
+def print_metrics(y_true: np.ndarray, y_pred: np.ndarray, y_train: np.ndarray) -> None:
+    """
+    Print the metrics.
+    """
+    print("RMSE: {:.2f}".format(rmse(y_true, y_pred)))
+    print("MAPE: {:.2f}%".format(mape(y_true, y_pred) * 100))
+    print("MASE: {:.2f}%".format(mase(y_true, y_pred, y_train) * 100))
