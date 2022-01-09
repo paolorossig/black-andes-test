@@ -10,6 +10,7 @@ from tensorflow.keras.layers import *
 from tensorflow.keras.losses import MeanSquaredError
 from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import EarlyStopping
 
 from src.forecast.utils import print_metrics
 
@@ -74,7 +75,7 @@ class DeepLearningModel:
 
         self.model = model
 
-    def fit(self, train_set, val_set, epochs):
+    def fit(self, train_set, val_set, epochs, early_stop=0):
         X_train, y_train = train_set
         X_val, y_val = val_set
 
@@ -85,7 +86,11 @@ class DeepLearningModel:
         )
 
         history = self.model.fit(
-            X_train, y_train, validation_data=(X_val, y_val), epochs=epochs
+            X_train,
+            y_train,
+            validation_data=(X_val, y_val),
+            epochs=epochs,
+            callbacks=[EarlyStopping(monitor="val_loss", patience=early_stop)],
         )
         self.history = history.history
 
