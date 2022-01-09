@@ -11,7 +11,7 @@ from tensorflow.keras.losses import MeanSquaredError
 from tensorflow.keras.metrics import RootMeanSquaredError
 from tensorflow.keras.optimizers import Adam
 
-# from utils import *
+from src.forecast.utils import rmse, mape, mase
 
 set_seed(42)
 
@@ -46,6 +46,20 @@ def time_series_to_X_y(series: [np.ndarray], window_size: int = 5) -> list:
         data.append((np.array(X), np.array(y)))
 
     return data
+
+
+def plot_predictions(y_true: np.ndarray, y_pred: np.ndarray, scaler) -> None:
+    y_true = scaler.inverse_transform(y_true.reshape(-1, 1)).flatten()
+    y_pred = scaler.inverse_transform(y_pred).flatten()
+
+    print("RMSE: {:.2f}".format(rmse(y_true, y_pred)))
+    print("MAPE: {:.2f}%".format(mape(y_true, y_pred) * 100))
+    print("MASE: {:.2f}%".format(mase(y_true, y_pred) * 100))
+
+    plt.plot(y_true, label="y_true")
+    plt.plot(y_pred, label="preds")
+    plt.legend()
+    plt.show()
 
 
 class DeepLearningModel:

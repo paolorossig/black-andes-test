@@ -66,3 +66,19 @@ def rmse(y_true, y_pred):
     Calculate the root mean squared error.
     """
     return np.sqrt(mean_squared_error(y_true, y_pred))
+
+
+def mape(y_true, y_pred):
+    """
+    Calculate the mean absolute percentage error.
+    """
+    return np.mean(np.abs((y_true - y_pred) / y_true))
+
+
+def mase(y_true, y_pred):
+    """
+    Calculate the mean absolute scaled error.
+    """
+    mae = np.mean(np.abs(y_true - y_pred))
+    mae_insample_naive = np.mean(np.abs(y_true[1:] - y_true[:-1]))
+    return mae / mae_insample_naive
