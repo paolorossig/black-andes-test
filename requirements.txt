@@ -3,8 +3,6 @@ pandas
 matplotlib
 plotly
 
-scikit-learn
-lightgbm
 tensorflow
 statsmodels
 pmdarima
