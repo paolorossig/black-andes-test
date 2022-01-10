@@ -49,17 +49,6 @@ def time_series_to_X_y(series: [np.ndarray], window_size: int = 5) -> list:
     return data
 
 
-def plot_predictions(
-    y_true: np.ndarray, y_pred: np.ndarray, y_train: np.ndarray
-) -> None:
-    print_metrics(y_true, y_pred, y_train)
-
-    plt.plot(y_true, "o", color="black", label="y_true")
-    plt.plot(y_pred, "-", label="preds")
-    plt.legend()
-    plt.show()
-
-
 class DeepLearningModel:
     def __init__(self, architecture, filters, window_size):
         self.architecture = architecture

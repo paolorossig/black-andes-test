@@ -60,6 +60,17 @@ def tsplot(y: pd.Series, lags: int = None, figsize: tuple = (12, 6)) -> None:
     plt.show()
 
 
+def plot_predictions(y_true, y_pred):
+    """
+    Plot time series vs predictions.
+    """
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.plot(y_true, "o", color="black", label="y_true")
+    ax.plot(y_pred, "-", label="preds")
+    ax.legend()
+    plt.show()
+
+
 ### Functions for calculating metrics.
 def rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """
@@ -90,4 +101,5 @@ def print_metrics(y_true: np.ndarray, y_pred: np.ndarray, y_train: np.ndarray) -
     """
     print("RMSE: {:.2f}".format(rmse(y_true, y_pred)))
     print("MAPE: {:.2f}%".format(mape(y_true, y_pred) * 100))
-    print("MASE: {:.2f}%".format(mase(y_true, y_pred, y_train) * 100))
+    if y_train is not None:
+        print("MASE: {:.2f}%".format(mase(y_true, y_pred, y_train) * 100))
