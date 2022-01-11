@@ -32,6 +32,65 @@ def time_series_split(data: pd.DataFrame, n_val: int, n_test: int) -> tuple:
     return train, val, test
 
 
+def get_covid_data(
+    country: str, start: str, end: str, freq: str = "MS"
+) -> pd.DataFrame:
+    """
+    Data extracted from COVID-19 Data Repository by the Center for
+    Systems Science and Engineering (CSSE) at Johns Hopkins University
+    See https://github.com/CSSEGISandData/COVID-19
+
+    Parameters
+    ----------
+    country: str
+        The country to get the data for. (e.g. "Peru", "Colombia", "Ecuador")
+    start: str
+        The start date of the data. (e.g. "2020-01-01")
+    end: str
+        The end date of the data. (e.g. "2020-12-01")
+    freq: str
+        The frequency of the data. (e.g. "D", "W", "M", "MS")
+    """
+    df = pd.read_csv(
+        "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"
+    )
+    df = df[df["Country/Region"] == country]
+    df = pd.melt(
+        df,
+        value_vars=df.columns[4:],
+        var_name="date",
+        value_name="new_cases",
+    )
+    df.date = pd.to_datetime(df.date, format="%m/%d/%y")
+    df.set_index("date", inplace=True)
+
+    if freq != "D":
+        df = df.resample(freq).sum()
+
+    start = pd.to_datetime(start)
+    if start < df.index.min():
+        periods = np.round(
+            (df.index.min() - start) / np.timedelta64(1, freq[:1])
+        ).astype(int)
+        missing_dates = pd.DataFrame(
+            {
+                "date": pd.date_range(start, periods=periods, freq=freq),
+                "new_cases": np.zeros(periods),
+            }
+        ).set_index("date")
+        df = pd.concat([missing_dates, df])
+
+    df = df[start:end]
+
+    df_diff = df - df.shift(1)
+    df_diff.new_cases = df_diff.new_cases.fillna(0).astype(int)
+
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.plot(df_diff)
+
+    return df_diff
+
+
 ### Functions for plotting the data.
 def tsplot(y: pd.Series, lags: int = None, figsize: tuple = (12, 6)) -> None:
     """
