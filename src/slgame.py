@@ -16,8 +16,10 @@ class SnakesLaddersGame:
         return np.random.randint(1, 7)
 
     def get_next_state(self, state=1, prob_take_ladder=1, prob_take_snake=1):
-        """Return the new state of the player and the type landed.
-        Types: normal, snake and ladder."""
+        """
+        Return the new state of the player and the type landed.
+        Types: normal, snake and ladder.
+        """
         die_output = self.roll_a_die()
         new_state = die_output + state
 
@@ -44,10 +46,12 @@ class SnakesLaddersGame:
         p2_initial_state=1,
         p2_take_first_snake=1,
     ):
-        """Run a 2-player simulation of N iterations and get the:
+        """
+        Run a 2-player simulation of N iterations and get the:
         1. probability that the player who starts the game wins,
         2. average number of ladders landed, and
-        3. average number of snakes landed."""
+        3. average number of snakes landed.
+        """
         p1_wins = 0
         types_landed = {}
 
